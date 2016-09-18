@@ -30,16 +30,6 @@ class MapViewController: UIViewController  {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        flickr.picturesForLocation(lat: 27, lon: 72, completion: {error, photos in
-            if error != nil{
-                print(error)
-            }else{
-            
-                print(photos)
-            
-            }
-        })
-        
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(dropPin))
         //longPress.minimumPressDuration = 1.0
         mapView.delegate = self
@@ -103,6 +93,25 @@ class MapViewController: UIViewController  {
                     self.mapView.addAnnotation(annotation)
                     print("Problem with the data received from geocoder")
                 }
+                
+                
+                self.flickr.picturesForLocation(lat: coords.latitude, lon: coords.longitude, completion: {error, photos in
+                    if error != nil{
+                        print(error)
+                    }else{
+                        var index = 0
+                        let count = 20
+                        for photo in photos! {
+                            if index < count {
+                                let _ = Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext)
+                                print(photo.title, "done")
+                                index += 1
+                            }
+                        }
+                        
+                    }
+                })
+                
                 
                 let corePin = Pin(latitude: coords.latitude, longitude: coords.longitude, title: annotation.title!, subtitle: annotation.subtitle!, context: self.sharedContext)
                 CoreDataStackManager.sharedInstance().saveContext()
