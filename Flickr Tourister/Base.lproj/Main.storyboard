@@ -6,7 +6,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Map View Controller-->
+        <!--Flickr Tourister-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="MapViewController" customModule="Flickr_Tourister" customModuleProvider="target" sceneMemberID="viewController">
@@ -18,7 +18,9 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="BLl-KF-3ql"/>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="BLl-KF-3ql">
+                                <frame key="frameInset" width="1000" height="1000"/>
+                            </mapView>
                             <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Iiy-oA-mk8">
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Tap to remove pins" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eHw-ns-ndd">
@@ -46,7 +48,7 @@
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="Iiy-oA-mk8" secondAttribute="bottom" id="rrR-ZM-bBi"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="nGY-D6-XX8">
+                    <navigationItem key="navigationItem" title="Flickr Tourister" id="nGY-D6-XX8">
                         <barButtonItem key="rightBarButtonItem" systemItem="edit" id="Xh3-G0-mzl">
                             <connections>
                                 <action selector="editTapped:" destination="BYZ-38-t0r" id="Hi9-WM-npq"/>
@@ -74,12 +76,78 @@
                     <view key="view" contentMode="scaleToFill" id="Ho4-yA-ByW">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="ctI-GT-Lwi">
+                                <subviews>
+                                    <mapView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" mapType="standard" zoomEnabled="NO" scrollEnabled="NO" rotateEnabled="NO" pitchEnabled="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GR2-ab-ezr">
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="108" id="9nB-QV-wH2"/>
+                                        </constraints>
+                                    </mapView>
+                                    <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" indicatorStyle="black" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="NGh-6l-nsR">
+                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="svy-tk-gZE">
+                                            <size key="itemSize" width="113" height="108"/>
+                                            <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                            <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                            <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                        </collectionViewFlowLayout>
+                                        <cells>
+                                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="photoCell" id="iut-rc-HAN" customClass="PhotosCollectionViewCell" customModule="Flickr_Tourister" customModuleProvider="target">
+                                                <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
+                                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
+                                                    <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <subviews>
+                                                        <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7uM-Yu-AZw"/>
+                                                    </subviews>
+                                                </view>
+                                                <constraints>
+                                                    <constraint firstItem="7uM-Yu-AZw" firstAttribute="top" secondItem="iut-rc-HAN" secondAttribute="top" id="Pld-oT-Kce"/>
+                                                    <constraint firstAttribute="trailing" secondItem="7uM-Yu-AZw" secondAttribute="trailing" id="S4k-R3-ocq"/>
+                                                    <constraint firstItem="7uM-Yu-AZw" firstAttribute="leading" secondItem="iut-rc-HAN" secondAttribute="leading" id="b7J-DT-kiU"/>
+                                                    <constraint firstAttribute="bottom" secondItem="7uM-Yu-AZw" secondAttribute="bottom" id="k7v-c5-gpn"/>
+                                                </constraints>
+                                                <edgeInsets key="layoutMargins" top="0.0" left="0.0" bottom="0.0" right="0.0"/>
+                                                <size key="customSize" width="100" height="100"/>
+                                                <connections>
+                                                    <outlet property="imageView" destination="7uM-Yu-AZw" id="sOn-RP-JfG"/>
+                                                </connections>
+                                            </collectionViewCell>
+                                        </cells>
+                                    </collectionView>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="OtJ-XE-xWT">
+                                        <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="36" id="koU-yV-RLF"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="NGh-6l-nsR" firstAttribute="leading" secondItem="ctI-GT-Lwi" secondAttribute="leading" id="eOD-z6-4CL"/>
+                                    <constraint firstItem="OtJ-XE-xWT" firstAttribute="top" secondItem="NGh-6l-nsR" secondAttribute="bottom" id="evN-iN-S40"/>
+                                    <constraint firstAttribute="trailing" secondItem="NGh-6l-nsR" secondAttribute="trailing" id="fAH-zt-t6R"/>
+                                    <constraint firstItem="NGh-6l-nsR" firstAttribute="top" secondItem="GR2-ab-ezr" secondAttribute="bottom" id="tsX-Se-GmQ"/>
+                                </constraints>
+                            </stackView>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="m5w-go-o9A" firstAttribute="top" secondItem="ctI-GT-Lwi" secondAttribute="bottom" id="0Wl-d0-8tV"/>
+                            <constraint firstAttribute="trailing" secondItem="ctI-GT-Lwi" secondAttribute="trailing" id="16j-U5-zEj"/>
+                            <constraint firstItem="ctI-GT-Lwi" firstAttribute="top" secondItem="ISr-u9-x5H" secondAttribute="bottom" id="N7c-8T-yl9"/>
+                            <constraint firstItem="ctI-GT-Lwi" firstAttribute="leading" secondItem="Ho4-yA-ByW" secondAttribute="leading" id="cha-zF-X1x"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="collectionView" destination="NGh-6l-nsR" id="fKP-Jx-gPg"/>
+                        <outlet property="mapView" destination="GR2-ab-ezr" id="nCz-C8-TGb"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="jIo-1M-sCP" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1662" y="107"/>
+            <point key="canvasLocation" x="1661.5999999999999" y="106.59670164917542"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="mJM-9x-nmr">

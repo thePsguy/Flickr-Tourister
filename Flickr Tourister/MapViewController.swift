@@ -68,6 +68,7 @@ class MapViewController: UIViewController  {
             let touchPoint = gestureRecognizer.location(in: mapView)
             let coords = mapView.convert(touchPoint, toCoordinateFrom: mapView)
             let annotation = MKPointAnnotation()
+//            var pingImages: [Image]
             annotation.coordinate = coords
             
             CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: coords.latitude, longitude: coords.longitude), completionHandler: {(placemarks, error) -> Void in
@@ -75,9 +76,7 @@ class MapViewController: UIViewController  {
                     print("Reverse geocoder failed with error" + error!.localizedDescription)
                     return
                 }
-                if placemarks!.count > 0 {
-                    let pm = placemarks![0]
-                    let address = pm.addressDictionary!["FormattedAddressLines"] as! NSArray
+                if let pm = placemarks?[0], let address = pm.addressDictionary!["FormattedAddressLines"] as? NSArray {
                     annotation.subtitle = ""
                     for line in address {
                         if line as! String == address[0] as! String {
@@ -89,32 +88,30 @@ class MapViewController: UIViewController  {
                     self.mapView.addAnnotation(annotation)
                 }
                 else {
-                    annotation.title = "Unknown Place"
+                    annotation.title = "Unknown Location"
                     self.mapView.addAnnotation(annotation)
                     print("Problem with the data received from geocoder")
                 }
                 
+                let corePin = Pin(latitude: coords.latitude, longitude: coords.longitude, title: annotation.title!, subtitle: annotation.subtitle, context: self.sharedContext)
                 
                 self.flickr.picturesForLocation(lat: coords.latitude, lon: coords.longitude, completion: {error, photos in
                     if error != nil{
                         print(error)
                     }else{
                         var index = 0
-                        let count = 20
+                        let count = 5
                         for photo in photos! {
                             if index < count {
-                                let _ = Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext)
-                                print(photo.title, "done")
+                                corePin.addToImages(Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext))
+//                                print("\(index) downloaded at \(corePin.title)")
+                                CoreDataStackManager.sharedInstance().saveContext()
                                 index += 1
                             }
                         }
                         
                     }
                 })
-                
-                
-                let corePin = Pin(latitude: coords.latitude, longitude: coords.longitude, title: annotation.title!, subtitle: annotation.subtitle!, context: self.sharedContext)
-                CoreDataStackManager.sharedInstance().saveContext()
                 self.pins.append(corePin)
             })
         }
@@ -134,6 +131,7 @@ extension MapViewController: MKMapViewDelegate {
 
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
             let selectedAnnotation = view.annotation!
+            mapView.deselectAnnotation(selectedAnnotation, animated: true)
             for pin in pins{
                 if pin.latutude == selectedAnnotation.coordinate.latitude && pin.longitude == selectedAnnotation.coordinate.longitude {
                     if self.editMode {
@@ -141,10 +139,18 @@ extension MapViewController: MKMapViewDelegate {
                         sharedContext.delete(pin)
                         CoreDataStackManager.sharedInstance().saveContext()
                     } else {
+                        
+//                        print(pin.images!.count, "at \(pin.title) before segue")
                         performSegue(withIdentifier: "pinDetailer", sender: pin)
                     }
                 }
             }
+    }
+    
+    func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
+        for view in views{
+            view.canShowCallout = false
+        }
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -153,7 +159,7 @@ extension MapViewController: MKMapViewDelegate {
         case "pinDetailer"?:
                 let dest = segue.destination as! PhotosViewController
                 let pin = sender as! Pin
-                dest.pin = pin
+                dest.selectedPin = pin
         default:
                 print("Unknown segue")
         }

@@ -2,7 +2,7 @@
 //  Image+CoreDataProperties.swift
 //  Flickr Tourister
 //
-//  Created by Pushkar Sharma on 18/09/2016.
+//  Created by Pushkar Sharma on 19/09/2016.
 //  Copyright © 2016 thePsguy. All rights reserved.
 //
 
@@ -15,7 +15,7 @@ extension Image {
         return NSFetchRequest<Image>(entityName: "Image");
     }
 
-    @NSManaged public var image: NSData?
+    @NSManaged public var imageData: NSData?
     @NSManaged public var pin: Pin?
 
 }

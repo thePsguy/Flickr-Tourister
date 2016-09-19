@@ -16,9 +16,13 @@ public class Image: NSManagedObject {
     convenience init(image: UIImage, context: NSManagedObjectContext){
         if let ent = NSEntityDescription.entity(forEntityName: "Image", in: context){
             self.init( entity: ent, insertInto: context)
-            self.image = NSData(data: UIImagePNGRepresentation(image)!)
+            self.imageData = UIImagePNGRepresentation(image) as NSData?
         }else{
             fatalError("Entity not found.")
         }
+    }
+    
+    func getImage() -> UIImage?{
+            return UIImage(data: self.imageData! as Data)
     }
 }
