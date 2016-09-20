@@ -2,7 +2,7 @@
 //  Pin+CoreDataProperties.swift
 //  Flickr Tourister
 //
-//  Created by Pushkar Sharma on 18/09/2016.
+//  Created by Pushkar Sharma on 20/09/2016.
 //  Copyright © 2016 thePsguy. All rights reserved.
 //
 
@@ -17,8 +17,11 @@ extension Pin {
 
     @NSManaged public var latutude: Double
     @NSManaged public var longitude: Double
-    @NSManaged public var title: String?
     @NSManaged public var subtitle: String?
+    @NSManaged public var title: String?
+    @NSManaged public var imageCount: Int32
+    @NSManaged public var lowerBound: Int32
+    @NSManaged public var upperBound: Int32
     @NSManaged public var images: NSSet?
 
 }

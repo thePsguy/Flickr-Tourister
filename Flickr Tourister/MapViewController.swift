@@ -16,8 +16,11 @@ class MapViewController: UIViewController  {
     var pins = [Pin]()
     let flickr = FlickrClient.sharedInstance()
     
+    weak var delegate: MapViewControllerDelegate?
+    
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var deleteView: UIView!
+    
     
     // Flag for editing mode
     var editMode = false
@@ -29,9 +32,12 @@ class MapViewController: UIViewController  {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(dropPin))
-        //longPress.minimumPressDuration = 1.0
+        
+        if let lastRegion = UserDefaults.standard.object(forKey: "LastMapRegion") as? [String:Double] { //Loading persistent map location, if any.
+            mapView.region = MKCoordinateRegionMake(CLLocationCoordinate2DMake(lastRegion["lat"]!, lastRegion["long"]!), MKCoordinateSpanMake(lastRegion["deltaLat"]!, lastRegion["deltaLong"]!))
+        }
+        
         mapView.delegate = self
         mapView.addGestureRecognizer(longPress)
         addSavedPinsToMap()
@@ -93,26 +99,32 @@ class MapViewController: UIViewController  {
                     print("Problem with the data received from geocoder")
                 }
                 
-                let corePin = Pin(latitude: coords.latitude, longitude: coords.longitude, title: annotation.title!, subtitle: annotation.subtitle, context: self.sharedContext)
-                
                 self.flickr.picturesForLocation(lat: coords.latitude, lon: coords.longitude, completion: {error, photos in
                     if error != nil{
                         print(error)
                     }else{
+                        let imageCount = photos!.count
+                        let upperBound = 20<imageCount ? 20 : imageCount
+                        
+                        let corePin = Pin(latitude: coords.latitude, longitude: coords.longitude, title: annotation.title!, subtitle: annotation.subtitle, lowerBound: 0, upperBound: upperBound, imageCount: imageCount, context: self.sharedContext)
+                        self.pins.append(corePin)
+                        
                         var index = 0
-                        let count = 5
+                        let count = FlickrClient.Constants.setSize
                         for photo in photos! {
                             if index < count {
                                 corePin.addToImages(Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext))
-//                                print("\(index) downloaded at \(corePin.title)")
+                                
+                                DispatchQueue.main.async {
+                                    self.delegate?.imageAdded()
+                                }
+                    
                                 CoreDataStackManager.sharedInstance().saveContext()
                                 index += 1
                             }
                         }
-                        
                     }
                 })
-                self.pins.append(corePin)
             })
         }
     }
@@ -133,14 +145,13 @@ extension MapViewController: MKMapViewDelegate {
             let selectedAnnotation = view.annotation!
             mapView.deselectAnnotation(selectedAnnotation, animated: true)
             for pin in pins{
+                
                 if pin.latutude == selectedAnnotation.coordinate.latitude && pin.longitude == selectedAnnotation.coordinate.longitude {
                     if self.editMode {
                         mapView.removeAnnotation(selectedAnnotation)
                         sharedContext.delete(pin)
                         CoreDataStackManager.sharedInstance().saveContext()
                     } else {
-                        
-//                        print(pin.images!.count, "at \(pin.title) before segue")
                         performSegue(withIdentifier: "pinDetailer", sender: pin)
                     }
                 }
@@ -160,9 +171,20 @@ extension MapViewController: MKMapViewDelegate {
                 let dest = segue.destination as! PhotosViewController
                 let pin = sender as! Pin
                 dest.selectedPin = pin
+                self.delegate = dest
         default:
                 print("Unknown segue")
         }
     }
+
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        let mapRegion: Any = ["lat": mapView.centerCoordinate.latitude, "long": mapView.centerCoordinate.longitude, "deltaLat": mapView.region.span.latitudeDelta, "deltaLong": mapView.region.span.longitudeDelta]
+        UserDefaults.standard.setValue(mapRegion, forKey: "LastMapRegion") //Persisting Latest Map Location
+    }
+    
+}
+
+protocol MapViewControllerDelegate: class {     // ref: http://stephenradford.me/creating-a-delegate-in-swift/
+    func imageAdded()
 }
 

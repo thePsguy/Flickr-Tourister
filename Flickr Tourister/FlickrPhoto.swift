@@ -38,4 +38,5 @@ struct FlickrPhoto{
             }
         return FlickrPhotos
     }
+    
 }

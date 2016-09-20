@@ -78,7 +78,6 @@ class CoreDataStackManager {
             NSLog("Unresolved error \(wrappedError), \(wrappedError.userInfo)")
             abort()
         }
-        
         return coordinator
     }()
     

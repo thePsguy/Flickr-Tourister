@@ -18,6 +18,7 @@ extension FlickrClient{
         static let APIKey = "fa09d9190adfbcebb85a952cfd57a1c6"
         static let Secret = "d7eb357bef026863"
         static let BaseUrl = "http://api.flickr.com/services/rest"
+        static let setSize = 21
     }
     
     
@@ -25,10 +26,10 @@ extension FlickrClient{
     struct FlickrParameterValues {
         static let SearchMethod = "flickr.photos.search"
         static let ResponseFormat = "json"
-        static let DisableJSONCallback = "1" /* 1 means "yes" */
+        static let DisableJSONCallback = "1"
         static let GalleryPhotosMethod = "flickr.galleries.getPhotos"
         static let GalleryID = "5704-72157622566655097"
-        static let MediumURL = "url_m"
+        static let MediumURL = "url_q"
         static let UseSafeSearch = "1"
     }
     
@@ -39,7 +40,7 @@ extension FlickrClient{
         static let Photos = "photos"
         static let Photo = "photo"
         static let Title = "title"
-        static let MediumURL = "url_m"
+        static let MediumURL = "url_q"
         static let Pages = "pages"
         static let Total = "total"
     }

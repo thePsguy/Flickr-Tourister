@@ -101,25 +101,39 @@
                                                     <autoresizingMask key="autoresizingMask"/>
                                                     <subviews>
                                                         <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="7uM-Yu-AZw"/>
+                                                        <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="phY-d1-EU3"/>
                                                     </subviews>
                                                 </view>
                                                 <constraints>
+                                                    <constraint firstItem="phY-d1-EU3" firstAttribute="centerY" secondItem="7uM-Yu-AZw" secondAttribute="centerY" id="3Pr-ln-LTC"/>
                                                     <constraint firstItem="7uM-Yu-AZw" firstAttribute="top" secondItem="iut-rc-HAN" secondAttribute="top" id="Pld-oT-Kce"/>
                                                     <constraint firstAttribute="trailing" secondItem="7uM-Yu-AZw" secondAttribute="trailing" id="S4k-R3-ocq"/>
                                                     <constraint firstItem="7uM-Yu-AZw" firstAttribute="leading" secondItem="iut-rc-HAN" secondAttribute="leading" id="b7J-DT-kiU"/>
                                                     <constraint firstAttribute="bottom" secondItem="7uM-Yu-AZw" secondAttribute="bottom" id="k7v-c5-gpn"/>
+                                                    <constraint firstItem="phY-d1-EU3" firstAttribute="centerX" secondItem="7uM-Yu-AZw" secondAttribute="centerX" id="zdb-pR-4fx"/>
                                                 </constraints>
                                                 <edgeInsets key="layoutMargins" top="0.0" left="0.0" bottom="0.0" right="0.0"/>
                                                 <size key="customSize" width="100" height="100"/>
                                                 <connections>
+                                                    <outlet property="activityIndicator" destination="phY-d1-EU3" id="6D5-Op-Sbq"/>
                                                     <outlet property="imageView" destination="7uM-Yu-AZw" id="sOn-RP-JfG"/>
                                                 </connections>
                                             </collectionViewCell>
                                         </cells>
                                     </collectionView>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="OtJ-XE-xWT">
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="WP6-VH-p4C" userLabel="New Collection">
+                                                <state key="normal" title="New Collection"/>
+                                                <connections>
+                                                    <action selector="getNewCollection:" destination="B4j-qs-Ren" eventType="touchUpInside" id="WIR-Ej-1Hf"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
                                         <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                                         <constraints>
+                                            <constraint firstItem="WP6-VH-p4C" firstAttribute="centerY" secondItem="OtJ-XE-xWT" secondAttribute="centerY" id="8hG-tY-bh7"/>
+                                            <constraint firstItem="WP6-VH-p4C" firstAttribute="centerX" secondItem="OtJ-XE-xWT" secondAttribute="centerX" id="e8f-p7-RHb"/>
                                             <constraint firstAttribute="height" constant="36" id="koU-yV-RLF"/>
                                         </constraints>
                                     </view>
@@ -131,17 +145,26 @@
                                     <constraint firstItem="NGh-6l-nsR" firstAttribute="top" secondItem="GR2-ab-ezr" secondAttribute="bottom" id="tsX-Se-GmQ"/>
                                 </constraints>
                             </stackView>
+                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="No images at this location." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3Nq-Kk-Xfc">
+                                <frame key="frameInset" minX="74" minY="323" width="228" height="21"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleCallout"/>
+                                <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="m5w-go-o9A" firstAttribute="top" secondItem="ctI-GT-Lwi" secondAttribute="bottom" id="0Wl-d0-8tV"/>
                             <constraint firstAttribute="trailing" secondItem="ctI-GT-Lwi" secondAttribute="trailing" id="16j-U5-zEj"/>
+                            <constraint firstItem="3Nq-Kk-Xfc" firstAttribute="centerX" secondItem="Ho4-yA-ByW" secondAttribute="centerX" id="D1H-pj-1gj"/>
                             <constraint firstItem="ctI-GT-Lwi" firstAttribute="top" secondItem="ISr-u9-x5H" secondAttribute="bottom" id="N7c-8T-yl9"/>
+                            <constraint firstItem="3Nq-Kk-Xfc" firstAttribute="centerY" secondItem="Ho4-yA-ByW" secondAttribute="centerY" id="W9L-Wx-obc"/>
                             <constraint firstItem="ctI-GT-Lwi" firstAttribute="leading" secondItem="Ho4-yA-ByW" secondAttribute="leading" id="cha-zF-X1x"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="collectionView" destination="NGh-6l-nsR" id="fKP-Jx-gPg"/>
+                        <outlet property="infoLabel" destination="3Nq-Kk-Xfc" id="WF0-tZ-u9N"/>
                         <outlet property="mapView" destination="GR2-ab-ezr" id="nCz-C8-TGb"/>
                     </connections>
                 </viewController>
