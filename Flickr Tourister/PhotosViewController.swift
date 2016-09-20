@@ -22,9 +22,9 @@ class PhotosViewController: UIViewController {
     }
 
     
-    var pinImages: [UIImage?] = []
+    var pinImages: [Image] = []
     @IBOutlet weak var infoLabel: UILabel!
-    
+    @IBOutlet weak var newCollectionButton: UIButton!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
     
@@ -44,23 +44,20 @@ class PhotosViewController: UIViewController {
             imagesForPin(exist: false)
         } else {
             imagesForPin(exist: true)
-            for item in (selectedPin.images?.allObjects)! {
-                let obj = item as! Image
-                
-                if let img = obj.getImage() {
-                    pinImages.append(img)
-                } else {
-                    pinImages.append(nil)
-                }
+            for image in (selectedPin.images?.allObjects)! {
+                    pinImages.append(image as! Image)
             }
             collectionView.reloadData()
         }
     }
 
     @IBAction func getNewCollection(_ sender: AnyObject) {
+        self.newCollectionButton.isEnabled = false
         let lowerBound = selectedPin.upperBound
         let setSize = FlickrClient.Constants.setSize
         let upperBound = (lowerBound + setSize <= selectedPin.imageCount) ? lowerBound + setSize : selectedPin.imageCount
+        selectedPin.lowerBound = lowerBound
+        selectedPin.upperBound = upperBound
         flickr.picturesForLocationInBounds(lat: selectedPin.latutude, lon: selectedPin.longitude, lowerIndex: Int(lowerBound), upperIndex: Int(upperBound), completion: {error, photos in
             
             self.selectedPin.removeFromImages(self.selectedPin.images!)
@@ -71,10 +68,11 @@ class PhotosViewController: UIViewController {
                     DispatchQueue.main.async {
                         self.imageAdded()
                     }
-                    
                     CoreDataStackManager.sharedInstance().saveContext()
                     }
-        
+            DispatchQueue.main.async {
+                self.newCollectionButton.isEnabled = true
+            }
         })
     }
     
@@ -93,7 +91,7 @@ extension PhotosViewController: UICollectionViewDelegate, UICollectionViewDataSo
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "photoCell", for: indexPath) as! PhotosCollectionViewCell
         
         if indexPath.row < pinImages.count  {
-            let img = pinImages[pinImages.startIndex.advanced(by: indexPath.row)]
+            let img = pinImages[pinImages.startIndex.advanced(by: indexPath.row)].getImage()
             cell.imageView.image = img
             cell.imageView.isHidden = false
             cell.activityIndicator.isHidden = true
@@ -107,8 +105,10 @@ extension PhotosViewController: UICollectionViewDelegate, UICollectionViewDataSo
     }
  
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let cell = collectionView.cellForItem(at: indexPath) as! PhotosCollectionViewCell
-        
+        self.newCollectionButton.isEnabled = false
+        self.selectedPin.removeFromImages(pinImages[indexPath.row])
+        CoreDataStackManager.sharedInstance().saveContext()
+        imageDeleted()
     }
     
 }
@@ -126,6 +126,35 @@ extension PhotosViewController: MKMapViewDelegate, MapViewControllerDelegate {
     
     func imageAdded() {
         self.refreshCollection()
+    }
+    
+    func loadingComplete() {
+        self.newCollectionButton.isEnabled = true
+    }
+    
+    func imageDeleted(){
+        self.refreshCollection()
+        let lowerBound = selectedPin.upperBound
+        let setSize = 1
+        let upperBound = (lowerBound + setSize <= selectedPin.imageCount) ? lowerBound + setSize : selectedPin.imageCount
+        selectedPin.lowerBound = lowerBound
+        selectedPin.upperBound = upperBound
+        flickr.picturesForLocationInBounds(lat: selectedPin.latutude, lon: selectedPin.longitude, lowerIndex: Int(upperBound), upperIndex: Int(upperBound), completion: {error, photos in
+            
+            for photo in photos! {
+                print("got Image")
+                self.selectedPin.addToImages(Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext))
+                
+                DispatchQueue.main.async {
+                    self.imageAdded()
+                }
+                
+                CoreDataStackManager.sharedInstance().saveContext()
+            }
+            DispatchQueue.main.async {
+                self.newCollectionButton.isEnabled = true
+            }
+        })
     }
     
     func imagesForPin(exist: Bool){

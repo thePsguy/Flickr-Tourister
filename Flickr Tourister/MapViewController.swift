@@ -123,6 +123,9 @@ class MapViewController: UIViewController  {
                                 index += 1
                             }
                         }
+                        DispatchQueue.main.async {
+                            self.delegate?.loadingComplete()
+                        }
                     }
                 })
             })
@@ -186,5 +189,6 @@ extension MapViewController: MKMapViewDelegate {
 
 protocol MapViewControllerDelegate: class {     // ref: http://stephenradford.me/creating-a-delegate-in-swift/
     func imageAdded()
+    func loadingComplete()
 }
 
