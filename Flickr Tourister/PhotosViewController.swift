@@ -40,43 +40,55 @@ class PhotosViewController: UIViewController {
     func refreshCollection(){
         
         pinImages = []
-        if selectedPin.images?.count == 0 {
-            imagesForPin(exist: false)
-        } else {
-            imagesForPin(exist: true)
-            for image in (selectedPin.images?.allObjects)! {
-                    pinImages.append(image as! Image)
+        sharedContext.perform{
+            if self.selectedPin.images?.count == 0 {
+                self.imagesForPin(exist: false)
+            } else {
+                self.imagesForPin(exist: true)
+                for image in (self.selectedPin.images?.allObjects)! {
+                    self.pinImages.append(image as! Image)
+                }
+                DispatchQueue.main.async {
+                    self.collectionView.reloadData()
+                }
             }
-            collectionView.reloadData()
         }
     }
 
     @IBAction func getNewCollection(_ sender: AnyObject) {
-        self.newCollectionButton.isEnabled = false
-        let lowerBound = selectedPin.upperBound
-        let setSize = FlickrClient.Constants.setSize
-        let upperBound = (lowerBound + setSize <= selectedPin.imageCount) ? lowerBound + setSize : selectedPin.imageCount
-        selectedPin.lowerBound = lowerBound
-        selectedPin.upperBound = upperBound
-        flickr.picturesForLocationInBounds(lat: selectedPin.latutude, lon: selectedPin.longitude, lowerIndex: Int(lowerBound), upperIndex: Int(upperBound), completion: {error, photos in
+        sharedContext.perform {
+            self.newCollectionButton.isEnabled = false
+            let selectedPin = self.selectedPin!
+            let lowerBound = selectedPin.upperBound
+            let setSize = FlickrClient.Constants.setSize
+            let upperBound = (lowerBound + setSize - 1 <= selectedPin.imageCount) ? (lowerBound + setSize - 1) : selectedPin.imageCount
+            selectedPin.lowerBound = lowerBound
+            selectedPin.upperBound = upperBound
             
-//            self.selectedPin.removeFromImages(self.selectedPin.images!)
-            for image in self.selectedPin.images! {
-                self.sharedContext.delete(image as! Image)  //Removing previous Images
+            for image in self.selectedPin.images! {         //Removing previous Images
+                self.sharedContext.delete(image as! Image)
             }
             
-            for photo in photos! {
-                    self.selectedPin.addToImages(Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext))
-                    
-                    DispatchQueue.main.async {
-                        self.imageAdded()
-                    }
-                    CoreDataStackManager.sharedInstance().saveContext()
-                    }
             DispatchQueue.main.async {
-                self.newCollectionButton.isEnabled = true
+                self.refreshCollection()
             }
-        })
+            self.flickr.picturesForLocationInBounds(lat: selectedPin.latutude, lon: selectedPin.longitude, lowerIndex: Int(lowerBound), upperIndex: Int(upperBound), completion: {error, photos in
+                    for photo in photos! {
+                        let img = UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!
+                        self.sharedContext.perform({
+                            self.selectedPin.addToImages(Image(image: img, context: self.sharedContext))
+                            DispatchQueue.main.async {
+                                self.imageAdded()
+                            }
+                            CoreDataStackManager.sharedInstance().saveContext()
+                        })
+                    }
+                    DispatchQueue.main.async {
+                        self.refreshCollection()
+                        self.newCollectionButton.isEnabled = true
+                    }
+            })
+        }
     }
     
     override func didReceiveMemoryWarning() {
@@ -94,8 +106,10 @@ extension PhotosViewController: UICollectionViewDelegate, UICollectionViewDataSo
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "photoCell", for: indexPath) as! PhotosCollectionViewCell
         
         if indexPath.row < pinImages.count  {
-            let img = pinImages[pinImages.startIndex.advanced(by: indexPath.row)].getImage()
-            cell.imageView.image = img
+            sharedContext.performAndWait({
+                cell.imageView.image = self.pinImages[self.pinImages.startIndex.advanced(by: indexPath.row)].getImage()
+            })
+//            cell.imageView.image = img
             cell.imageView.isHidden = false
             cell.activityIndicator.isHidden = true
             cell.activityIndicator.stopAnimating()
@@ -110,8 +124,10 @@ extension PhotosViewController: UICollectionViewDelegate, UICollectionViewDataSo
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         self.newCollectionButton.isEnabled = false
 //        self.selectedPin.removeFromImages(pinImages[indexPath.row])
-        self.sharedContext.delete(pinImages[indexPath.row])
-        CoreDataStackManager.sharedInstance().saveContext()
+        self.sharedContext.performAndWait({
+            self.sharedContext.delete(self.pinImages[indexPath.row])
+            CoreDataStackManager.sharedInstance().saveContext()
+        })
         imageDeleted()
     }
     
@@ -120,12 +136,16 @@ extension PhotosViewController: UICollectionViewDelegate, UICollectionViewDataSo
 extension PhotosViewController: MKMapViewDelegate, MapViewControllerDelegate {
     
     func initMap(){
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = CLLocationCoordinate2D(latitude: selectedPin.latutude, longitude: selectedPin.longitude)
-        annotation.title = selectedPin.title
-        annotation.subtitle = selectedPin.subtitle
-        mapView.centerCoordinate = annotation.coordinate
-        mapView.addAnnotation(annotation)
+        sharedContext.perform {
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = CLLocationCoordinate2D(latitude: self.selectedPin.latutude, longitude: self.selectedPin.longitude)
+            annotation.title = self.selectedPin.title
+            annotation.subtitle = self.selectedPin.subtitle
+            DispatchQueue.main.async {
+                self.mapView.centerCoordinate = annotation.coordinate
+                self.mapView.addAnnotation(annotation)
+            }
+        }
     }
     
     func imageAdded() {
@@ -133,32 +153,38 @@ extension PhotosViewController: MKMapViewDelegate, MapViewControllerDelegate {
     }
     
     func loadingComplete() {
-        self.newCollectionButton.isEnabled = true
+        DispatchQueue.main.async {
+            self.newCollectionButton.isEnabled = true
+        }
     }
     
     func imageDeleted(){
         self.refreshCollection()
-        let lowerBound = selectedPin.upperBound
-        let setSize = 1
-        let upperBound = (lowerBound + setSize <= selectedPin.imageCount) ? lowerBound + setSize : selectedPin.imageCount
-        selectedPin.lowerBound = lowerBound
-        selectedPin.upperBound = upperBound
-        flickr.picturesForLocationInBounds(lat: selectedPin.latutude, lon: selectedPin.longitude, lowerIndex: Int(upperBound), upperIndex: Int(upperBound), completion: {error, photos in
-            
-            for photo in photos! {
-                print("got Image")
-                self.selectedPin.addToImages(Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext))
-                
-                DispatchQueue.main.async {
-                    self.imageAdded()
-                }
-                
-                CoreDataStackManager.sharedInstance().saveContext()
-            }
-            DispatchQueue.main.async {
-                self.newCollectionButton.isEnabled = true
-            }
-        })
+        self.sharedContext.perform {
+            let selectedPin = self.selectedPin!
+            let lowerBound = selectedPin.upperBound
+            let setSize = 1
+            let upperBound = (lowerBound + setSize <= selectedPin.imageCount) ? lowerBound + setSize : selectedPin.imageCount
+            self.selectedPin.lowerBound = lowerBound
+            self.selectedPin.upperBound = upperBound
+            self.flickr.picturesForLocationInBounds(lat: selectedPin.latutude, lon: selectedPin.longitude, lowerIndex: Int(upperBound), upperIndex: Int(upperBound), completion: {error, photos in
+                self.sharedContext.perform ({
+                    for photo in photos! {
+                        print("got Image")
+                        self.selectedPin.addToImages(Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext))
+                        
+                        DispatchQueue.main.async {
+                            self.imageAdded()
+                        }
+                        
+                        CoreDataStackManager.sharedInstance().saveContext()
+                    }
+                    DispatchQueue.main.async {
+                        self.newCollectionButton.isEnabled = true
+                    }
+                })
+            })
+        }
     }
     
     func imagesForPin(exist: Bool){

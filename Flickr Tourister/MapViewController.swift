@@ -47,26 +47,31 @@ class MapViewController: UIViewController  {
         
         pins = fetchAllPins()
         print("Pin count in core data is \(pins.count)")
-        
-        for pin in pins {
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = CLLocationCoordinate2D(latitude: pin.latutude, longitude: pin.longitude)
-            annotation.title = pin.title
-            annotation.subtitle = pin.subtitle
-            mapView.addAnnotation(annotation)
+        sharedContext.perform {
+            for pin in self.pins {
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = CLLocationCoordinate2D(latitude: pin.latutude, longitude: pin.longitude)
+                annotation.title = pin.title
+                annotation.subtitle = pin.subtitle
+                DispatchQueue.main.async {
+                    self.mapView.addAnnotation(annotation)
+                }
+            }
         }
     }
     
     func fetchAllPins() -> [Pin] {
-        
-        let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
-        
-        do {
-            return try sharedContext.fetch(fetchRequest)
-        } catch {
-            print("error in fetch")
-            return [Pin]()
+        var result = [Pin]()
+        sharedContext.performAndWait {
+            let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
+            do {
+                result = try self.sharedContext.fetch(fetchRequest)
+            } catch {
+                print("error in fetch")
+//                result = [Pin]()
+            }
         }
+        return result
     }
     
     func dropPin(gestureRecognizer:UIGestureRecognizer){
@@ -106,24 +111,31 @@ class MapViewController: UIViewController  {
                     }else{
                         let imageCount = photos!.count
                         let upperBound = 20<imageCount ? 20 : imageCount
+                        var thePin: Pin?
+                        self.sharedContext.perform({
+                            let corePin = Pin(latitude: coords.latitude, longitude: coords.longitude, title: annotation.title!, subtitle: annotation.subtitle, lowerBound: 0, upperBound: upperBound, imageCount: imageCount, context: self.sharedContext)
+                            self.pins.append(corePin)
+                            thePin = corePin
+                            CoreDataStackManager.sharedInstance().saveContext()
+                        })
+                            var index = 0
+                            let count = FlickrClient.Constants.setSize
+                            for photo in photos! {
+                                if index < count {
                         
-                        let corePin = Pin(latitude: coords.latitude, longitude: coords.longitude, title: annotation.title!, subtitle: annotation.subtitle, lowerBound: 0, upperBound: upperBound, imageCount: imageCount, context: self.sharedContext)
-                        self.pins.append(corePin)
-                        
-                        var index = 0
-                        let count = FlickrClient.Constants.setSize
-                        for photo in photos! {
-                            if index < count {
-                                corePin.addToImages(Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext))
-                                
-                                DispatchQueue.main.async {
-                                    self.delegate?.imageAdded()
+                                    let img = UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!
+                                    
+                                    self.sharedContext.perform ({
+                                        thePin!.addToImages(Image(image: img, context: self.sharedContext))
+                                        print("\(img) added")
+                                        CoreDataStackManager.sharedInstance().saveContext()
+                                    })
+                                    DispatchQueue.main.async {
+                                        self.delegate?.imageAdded()
+                                    }
+                                    index += 1
                                 }
-                    
-                                CoreDataStackManager.sharedInstance().saveContext()
-                                index += 1
                             }
-                        }
                         DispatchQueue.main.async {
                             self.delegate?.loadingComplete()
                         }
@@ -146,20 +158,25 @@ class MapViewController: UIViewController  {
 extension MapViewController: MKMapViewDelegate {
 
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        sharedContext.perform({
             let selectedAnnotation = view.annotation!
             mapView.deselectAnnotation(selectedAnnotation, animated: true)
-            for pin in pins{
-                
+            for pin in self.pins{
                 if pin.latutude == selectedAnnotation.coordinate.latitude && pin.longitude == selectedAnnotation.coordinate.longitude {
                     if self.editMode {
-                        mapView.removeAnnotation(selectedAnnotation)
-                        sharedContext.delete(pin)
+                        DispatchQueue.main.async {
+                            mapView.removeAnnotation(selectedAnnotation)
+                        }
+                        self.sharedContext.delete(pin)
                         CoreDataStackManager.sharedInstance().saveContext()
                     } else {
-                        performSegue(withIdentifier: "pinDetailer", sender: pin)
+                        DispatchQueue.main.async {
+                            self.performSegue(withIdentifier: "pinDetailer", sender: pin)
+                        }
                     }
                 }
             }
+        })
     }
     
     func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
@@ -170,8 +187,8 @@ extension MapViewController: MKMapViewDelegate {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         switch segue.identifier {
-        
         case "pinDetailer"?:
+                print("segue called")
                 let dest = segue.destination as! PhotosViewController
                 let pin = sender as! Pin
                 dest.selectedPin = pin

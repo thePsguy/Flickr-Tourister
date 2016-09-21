@@ -13,6 +13,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    let sharedContext = CoreDataStackManager.sharedInstance().managedObjectContext
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
@@ -20,11 +22,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
-        CoreDataStackManager.sharedInstance().saveContext()
+        sharedContext.performAndWait {
+            CoreDataStackManager.sharedInstance().saveContext()
+        }
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
-        CoreDataStackManager.sharedInstance().saveContext()
+        sharedContext.performAndWait {
+            CoreDataStackManager.sharedInstance().saveContext()
+        }
     }
 
     func applicationWillEnterForeground(_ application: UIApplication) {
@@ -37,6 +43,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+        sharedContext.performAndWait {
+            CoreDataStackManager.sharedInstance().saveContext()
+        }
     }
 
 
