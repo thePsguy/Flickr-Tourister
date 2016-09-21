@@ -91,6 +91,7 @@ class MapViewController: UIViewController  {
                             annotation.subtitle! += line as! String + " "
                         }
                     }
+                    
                     self.mapView.addAnnotation(annotation)
                 }
                 else {

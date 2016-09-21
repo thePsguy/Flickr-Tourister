@@ -60,7 +60,10 @@ class PhotosViewController: UIViewController {
         selectedPin.upperBound = upperBound
         flickr.picturesForLocationInBounds(lat: selectedPin.latutude, lon: selectedPin.longitude, lowerIndex: Int(lowerBound), upperIndex: Int(upperBound), completion: {error, photos in
             
-            self.selectedPin.removeFromImages(self.selectedPin.images!)
+//            self.selectedPin.removeFromImages(self.selectedPin.images!)
+            for image in self.selectedPin.images! {
+                self.sharedContext.delete(image as! Image)  //Removing previous Images
+            }
             
             for photo in photos! {
                     self.selectedPin.addToImages(Image(image: UIImage.init(data: try! Data.init(contentsOf: URL.init(string: photo.url!)!))!, context: self.sharedContext))
@@ -106,7 +109,8 @@ extension PhotosViewController: UICollectionViewDelegate, UICollectionViewDataSo
  
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         self.newCollectionButton.isEnabled = false
-        self.selectedPin.removeFromImages(pinImages[indexPath.row])
+//        self.selectedPin.removeFromImages(pinImages[indexPath.row])
+        self.sharedContext.delete(pinImages[indexPath.row])
         CoreDataStackManager.sharedInstance().saveContext()
         imageDeleted()
     }
